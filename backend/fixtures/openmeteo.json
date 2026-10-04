@@ -1,0 +1,16 @@
+{
+  "weather:munnar": [
+    {
+      "summary": "Synthetic: partly cloudy",
+      "max_c": 24,
+      "min_c": 15,
+      "precip": 20
+    },
+    {
+      "summary": "Synthetic: rain showers",
+      "max_c": 22,
+      "min_c": 14,
+      "precip": 50
+    }
+  ]
+}

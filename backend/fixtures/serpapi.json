@@ -1,0 +1,803 @@
+{
+  "dir:coimbatore:munnar:two_wheeler": {
+    "_engine": "google_maps_directions",
+    "_provenance": "synthetic test input",
+    "response": {
+      "directions": [
+        {
+          "via": "Synthetic route A",
+          "distance": 140000,
+          "duration": 14700,
+          "trips": [
+            {
+              "details": [
+                {
+                  "title": "Continue toward Coimbatore",
+                  "distance": 35000,
+                  "duration": 3675,
+                  "gps_coordinates": {
+                    "latitude": 11.0168,
+                    "longitude": 76.9558
+                  }
+                },
+                {
+                  "title": "Continue toward Pollachi",
+                  "distance": 35000,
+                  "duration": 3675,
+                  "gps_coordinates": {
+                    "latitude": 10.6588,
+                    "longitude": 77.0072
+                  }
+                },
+                {
+                  "title": "Continue toward Udumalpet",
+                  "distance": 35000,
+                  "duration": 3675,
+                  "gps_coordinates": {
+                    "latitude": 10.5847,
+                    "longitude": 77.2403
+                  }
+                },
+                {
+                  "title": "Continue toward Marayoor",
+                  "distance": 35000,
+                  "duration": 3675,
+                  "gps_coordinates": {
+                    "latitude": 10.2769,
+                    "longitude": 77.1629
+                  }
+                },
+                {
+                  "title": "Continue toward Munnar",
+                  "distance": 35000,
+                  "duration": 3675,
+                  "gps_coordinates": {
+                    "latitude": 10.0889,
+                    "longitude": 77.0595
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "via": "Synthetic route B",
+          "distance": 161000,
+          "duration": 16905,
+          "trips": [
+            {
+              "details": [
+                {
+                  "title": "Continue toward Coimbatore",
+                  "distance": 35000,
+                  "duration": 4226,
+                  "gps_coordinates": {
+                    "latitude": 11.0168,
+                    "longitude": 76.9558
+                  }
+                },
+                {
+                  "title": "Continue toward Pollachi",
+                  "distance": 35000,
+                  "duration": 4226,
+                  "gps_coordinates": {
+                    "latitude": 10.6588,
+                    "longitude": 77.0072
+                  }
+                },
+                {
+                  "title": "Continue toward Udumalpet",
+                  "distance": 35000,
+                  "duration": 4226,
+                  "gps_coordinates": {
+                    "latitude": 10.5847,
+                    "longitude": 77.2403
+                  }
+                },
+                {
+                  "title": "Continue toward Marayoor",
+                  "distance": 35000,
+                  "duration": 4226,
+                  "gps_coordinates": {
+                    "latitude": 10.2769,
+                    "longitude": 77.1629
+                  }
+                },
+                {
+                  "title": "Continue toward Munnar",
+                  "distance": 35000,
+                  "duration": 4226,
+                  "gps_coordinates": {
+                    "latitude": 10.0889,
+                    "longitude": 77.0595
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "places_info": [
+        {
+          "address": "Coimbatore",
+          "gps_coordinates": {
+            "latitude": 11.0168,
+            "longitude": 76.9558
+          }
+        },
+        {
+          "address": "Munnar",
+          "gps_coordinates": {
+            "latitude": 10.0889,
+            "longitude": 77.0595
+          }
+        }
+      ]
+    }
+  },
+  "dir:munnar:coimbatore:two_wheeler": {
+    "_engine": "google_maps_directions",
+    "_provenance": "synthetic test input",
+    "response": {
+      "directions": [
+        {
+          "via": "Synthetic route A",
+          "distance": 140000,
+          "duration": 14700,
+          "trips": [
+            {
+              "details": [
+                {
+                  "title": "Continue toward Munnar",
+                  "distance": 35000,
+                  "duration": 3675,
+                  "gps_coordinates": {
+                    "latitude": 10.0889,
+                    "longitude": 77.0595
+                  }
+                },
+                {
+                  "title": "Continue toward Marayoor",
+                  "distance": 35000,
+                  "duration": 3675,
+                  "gps_coordinates": {
+                    "latitude": 10.2769,
+                    "longitude": 77.1629
+                  }
+                },
+                {
+                  "title": "Continue toward Udumalpet",
+                  "distance": 35000,
+                  "duration": 3675,
+                  "gps_coordinates": {
+                    "latitude": 10.5847,
+                    "longitude": 77.2403
+                  }
+                },
+                {
+                  "title": "Continue toward Pollachi",
+                  "distance": 35000,
+                  "duration": 3675,
+                  "gps_coordinates": {
+                    "latitude": 10.6588,
+                    "longitude": 77.0072
+                  }
+                },
+                {
+                  "title": "Continue toward Coimbatore",
+                  "distance": 35000,
+                  "duration": 3675,
+                  "gps_coordinates": {
+                    "latitude": 11.0168,
+                    "longitude": 76.9558
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "via": "Synthetic route B",
+          "distance": 161000,
+          "duration": 16905,
+          "trips": [
+            {
+              "details": [
+                {
+                  "title": "Continue toward Munnar",
+                  "distance": 35000,
+                  "duration": 4226,
+                  "gps_coordinates": {
+                    "latitude": 10.0889,
+                    "longitude": 77.0595
+                  }
+                },
+                {
+                  "title": "Continue toward Marayoor",
+                  "distance": 35000,
+                  "duration": 4226,
+                  "gps_coordinates": {
+                    "latitude": 10.2769,
+                    "longitude": 77.1629
+                  }
+                },
+                {
+                  "title": "Continue toward Udumalpet",
+                  "distance": 35000,
+                  "duration": 4226,
+                  "gps_coordinates": {
+                    "latitude": 10.5847,
+                    "longitude": 77.2403
+                  }
+                },
+                {
+                  "title": "Continue toward Pollachi",
+                  "distance": 35000,
+                  "duration": 4226,
+                  "gps_coordinates": {
+                    "latitude": 10.6588,
+                    "longitude": 77.0072
+                  }
+                },
+                {
+                  "title": "Continue toward Coimbatore",
+                  "distance": 35000,
+                  "duration": 4226,
+                  "gps_coordinates": {
+                    "latitude": 11.0168,
+                    "longitude": 76.9558
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "places_info": [
+        {
+          "address": "Munnar",
+          "gps_coordinates": {
+            "latitude": 10.0889,
+            "longitude": 77.0595
+          }
+        },
+        {
+          "address": "Coimbatore",
+          "gps_coordinates": {
+            "latitude": 11.0168,
+            "longitude": 76.9558
+          }
+        }
+      ]
+    }
+  },
+  "dir:coimbatore:munnar:driving": {
+    "_engine": "google_maps_directions",
+    "_provenance": "synthetic test input",
+    "response": {
+      "directions": [
+        {
+          "via": "Synthetic route A",
+          "distance": 140000,
+          "duration": 13800,
+          "trips": [
+            {
+              "details": [
+                {
+                  "title": "Continue toward Coimbatore",
+                  "distance": 35000,
+                  "duration": 3450,
+                  "gps_coordinates": {
+                    "latitude": 11.0168,
+                    "longitude": 76.9558
+                  }
+                },
+                {
+                  "title": "Continue toward Pollachi",
+                  "distance": 35000,
+                  "duration": 3450,
+                  "gps_coordinates": {
+                    "latitude": 10.6588,
+                    "longitude": 77.0072
+                  }
+                },
+                {
+                  "title": "Continue toward Udumalpet",
+                  "distance": 35000,
+                  "duration": 3450,
+                  "gps_coordinates": {
+                    "latitude": 10.5847,
+                    "longitude": 77.2403
+                  }
+                },
+                {
+                  "title": "Continue toward Marayoor",
+                  "distance": 35000,
+                  "duration": 3450,
+                  "gps_coordinates": {
+                    "latitude": 10.2769,
+                    "longitude": 77.1629
+                  }
+                },
+                {
+                  "title": "Continue toward Munnar",
+                  "distance": 35000,
+                  "duration": 3450,
+                  "gps_coordinates": {
+                    "latitude": 10.0889,
+                    "longitude": 77.0595
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "via": "Synthetic route B",
+          "distance": 161000,
+          "duration": 15870,
+          "trips": [
+            {
+              "details": [
+                {
+                  "title": "Continue toward Coimbatore",
+                  "distance": 35000,
+                  "duration": 3967,
+                  "gps_coordinates": {
+                    "latitude": 11.0168,
+                    "longitude": 76.9558
+                  }
+                },
+                {
+                  "title": "Continue toward Pollachi",
+                  "distance": 35000,
+                  "duration": 3967,
+                  "gps_coordinates": {
+                    "latitude": 10.6588,
+                    "longitude": 77.0072
+                  }
+                },
+                {
+                  "title": "Continue toward Udumalpet",
+                  "distance": 35000,
+                  "duration": 3967,
+                  "gps_coordinates": {
+                    "latitude": 10.5847,
+                    "longitude": 77.2403
+                  }
+                },
+                {
+                  "title": "Continue toward Marayoor",
+                  "distance": 35000,
+                  "duration": 3967,
+                  "gps_coordinates": {
+                    "latitude": 10.2769,
+                    "longitude": 77.1629
+                  }
+                },
+                {
+                  "title": "Continue toward Munnar",
+                  "distance": 35000,
+                  "duration": 3967,
+                  "gps_coordinates": {
+                    "latitude": 10.0889,
+                    "longitude": 77.0595
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "places_info": [
+        {
+          "address": "Coimbatore",
+          "gps_coordinates": {
+            "latitude": 11.0168,
+            "longitude": 76.9558
+          }
+        },
+        {
+          "address": "Munnar",
+          "gps_coordinates": {
+            "latitude": 10.0889,
+            "longitude": 77.0595
+          }
+        }
+      ]
+    }
+  },
+  "dir:munnar:coimbatore:driving": {
+    "_engine": "google_maps_directions",
+    "_provenance": "synthetic test input",
+    "response": {
+      "directions": [
+        {
+          "via": "Synthetic route A",
+          "distance": 140000,
+          "duration": 13800,
+          "trips": [
+            {
+              "details": [
+                {
+                  "title": "Continue toward Munnar",
+                  "distance": 35000,
+                  "duration": 3450,
+                  "gps_coordinates": {
+                    "latitude": 10.0889,
+                    "longitude": 77.0595
+                  }
+                },
+                {
+                  "title": "Continue toward Marayoor",
+                  "distance": 35000,
+                  "duration": 3450,
+                  "gps_coordinates": {
+                    "latitude": 10.2769,
+                    "longitude": 77.1629
+                  }
+                },
+                {
+                  "title": "Continue toward Udumalpet",
+                  "distance": 35000,
+                  "duration": 3450,
+                  "gps_coordinates": {
+                    "latitude": 10.5847,
+                    "longitude": 77.2403
+                  }
+                },
+                {
+                  "title": "Continue toward Pollachi",
+                  "distance": 35000,
+                  "duration": 3450,
+                  "gps_coordinates": {
+                    "latitude": 10.6588,
+                    "longitude": 77.0072
+                  }
+                },
+                {
+                  "title": "Continue toward Coimbatore",
+                  "distance": 35000,
+                  "duration": 3450,
+                  "gps_coordinates": {
+                    "latitude": 11.0168,
+                    "longitude": 76.9558
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "via": "Synthetic route B",
+          "distance": 161000,
+          "duration": 15870,
+          "trips": [
+            {
+              "details": [
+                {
+                  "title": "Continue toward Munnar",
+                  "distance": 35000,
+                  "duration": 3967,
+                  "gps_coordinates": {
+                    "latitude": 10.0889,
+                    "longitude": 77.0595
+                  }
+                },
+                {
+                  "title": "Continue toward Marayoor",
+                  "distance": 35000,
+                  "duration": 3967,
+                  "gps_coordinates": {
+                    "latitude": 10.2769,
+                    "longitude": 77.1629
+                  }
+                },
+                {
+                  "title": "Continue toward Udumalpet",
+                  "distance": 35000,
+                  "duration": 3967,
+                  "gps_coordinates": {
+                    "latitude": 10.5847,
+                    "longitude": 77.2403
+                  }
+                },
+                {
+                  "title": "Continue toward Pollachi",
+                  "distance": 35000,
+                  "duration": 3967,
+                  "gps_coordinates": {
+                    "latitude": 10.6588,
+                    "longitude": 77.0072
+                  }
+                },
+                {
+                  "title": "Continue toward Coimbatore",
+                  "distance": 35000,
+                  "duration": 3967,
+                  "gps_coordinates": {
+                    "latitude": 11.0168,
+                    "longitude": 76.9558
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "places_info": [
+        {
+          "address": "Munnar",
+          "gps_coordinates": {
+            "latitude": 10.0889,
+            "longitude": 77.0595
+          }
+        },
+        {
+          "address": "Coimbatore",
+          "gps_coordinates": {
+            "latitude": 11.0168,
+            "longitude": 76.9558
+          }
+        }
+      ]
+    }
+  },
+  "places:munnar:attractions": {
+    "_engine": "google_maps",
+    "_provenance": "synthetic test input",
+    "response": {
+      "local_results": [
+        {
+          "title": "Tea Museum",
+          "data_id": "synthetic-tea-museum",
+          "address": "Synthetic fixture location; confirm before travel",
+          "rating": 4.2,
+          "gps_coordinates": {
+            "latitude": 10.092,
+            "longitude": 77.052
+          },
+          "opening_hours": {
+            "open": "09:00",
+            "close": "17:00"
+          }
+        },
+        {
+          "title": "Mattupetty Dam",
+          "data_id": "synthetic-mattupetty-dam",
+          "address": "Synthetic fixture location; confirm before travel",
+          "rating": 4.2,
+          "gps_coordinates": {
+            "latitude": 10.106,
+            "longitude": 77.125
+          },
+          "opening_hours": {
+            "open": "09:00",
+            "close": "17:00"
+          }
+        },
+        {
+          "title": "Echo Point",
+          "data_id": "synthetic-echo-point",
+          "address": "Synthetic fixture location; confirm before travel",
+          "rating": 4.2,
+          "gps_coordinates": {
+            "latitude": 10.117,
+            "longitude": 77.155
+          },
+          "opening_hours": {
+            "open": "09:00",
+            "close": "17:00"
+          }
+        },
+        {
+          "title": "Top Station",
+          "data_id": "synthetic-top-station",
+          "address": "Synthetic fixture location; confirm before travel",
+          "rating": 4.2,
+          "gps_coordinates": {
+            "latitude": 10.125,
+            "longitude": 77.246
+          }
+        },
+        {
+          "title": "Blossom Park",
+          "data_id": "synthetic-blossom-park",
+          "address": "Synthetic fixture location; confirm before travel",
+          "rating": 4.2,
+          "gps_coordinates": {
+            "latitude": 10.071,
+            "longitude": 77.065
+          },
+          "opening_hours": {
+            "open": "09:00",
+            "close": "17:00"
+          }
+        }
+      ]
+    }
+  },
+  "places:route:food": {
+    "_engine": "google_maps",
+    "_provenance": "synthetic test input",
+    "response": {
+      "local_results": [
+        {
+          "title": "Vegetarian meal stop \u2014 Pollachi [synthetic]",
+          "data_id": "synthetic-vegetarian-meal-stop-\u2014-pollachi-[synthetic]",
+          "address": "Synthetic fixture location; confirm before travel",
+          "rating": 4.2,
+          "gps_coordinates": {
+            "latitude": 10.6588,
+            "longitude": 77.0072
+          }
+        },
+        {
+          "title": "Vegetarian meal stop \u2014 Udumalpet [synthetic]",
+          "data_id": "synthetic-vegetarian-meal-stop-\u2014-udumalpet-[synthetic]",
+          "address": "Synthetic fixture location; confirm before travel",
+          "rating": 4.2,
+          "gps_coordinates": {
+            "latitude": 10.5847,
+            "longitude": 77.2403
+          }
+        },
+        {
+          "title": "Vegetarian meal stop \u2014 Marayoor [synthetic]",
+          "data_id": "synthetic-vegetarian-meal-stop-\u2014-marayoor-[synthetic]",
+          "address": "Synthetic fixture location; confirm before travel",
+          "rating": 4.2,
+          "gps_coordinates": {
+            "latitude": 10.2769,
+            "longitude": 77.1629
+          }
+        }
+      ]
+    }
+  },
+  "places:route:fuel": {
+    "_engine": "google_maps",
+    "_provenance": "synthetic test input",
+    "response": {
+      "local_results": [
+        {
+          "title": "Fuel candidate \u2014 Pollachi [synthetic]",
+          "data_id": "synthetic-fuel-candidate-\u2014-pollachi-[synthetic]",
+          "address": "Synthetic fixture location; confirm before travel",
+          "rating": 4.2,
+          "gps_coordinates": {
+            "latitude": 10.6588,
+            "longitude": 77.0072
+          }
+        },
+        {
+          "title": "Fuel candidate \u2014 Udumalpet [synthetic]",
+          "data_id": "synthetic-fuel-candidate-\u2014-udumalpet-[synthetic]",
+          "address": "Synthetic fixture location; confirm before travel",
+          "rating": 4.2,
+          "gps_coordinates": {
+            "latitude": 10.5847,
+            "longitude": 77.2403
+          }
+        },
+        {
+          "title": "Fuel candidate \u2014 Marayoor [synthetic]",
+          "data_id": "synthetic-fuel-candidate-\u2014-marayoor-[synthetic]",
+          "address": "Synthetic fixture location; confirm before travel",
+          "rating": 4.2,
+          "gps_coordinates": {
+            "latitude": 10.2769,
+            "longitude": 77.1629
+          }
+        }
+      ]
+    }
+  },
+  "places:route:washroom": {
+    "_engine": "google_maps",
+    "_provenance": "synthetic test input",
+    "response": {
+      "local_results": [
+        {
+          "title": "Washroom candidate \u2014 Pollachi [synthetic]",
+          "data_id": "synthetic-washroom-candidate-\u2014-pollachi-[synthetic]",
+          "address": "Synthetic fixture location; confirm before travel",
+          "rating": 4.2,
+          "gps_coordinates": {
+            "latitude": 10.6588,
+            "longitude": 77.0072
+          }
+        },
+        {
+          "title": "Washroom candidate \u2014 Udumalpet [synthetic]",
+          "data_id": "synthetic-washroom-candidate-\u2014-udumalpet-[synthetic]",
+          "address": "Synthetic fixture location; confirm before travel",
+          "rating": 4.2,
+          "gps_coordinates": {
+            "latitude": 10.5847,
+            "longitude": 77.2403
+          }
+        },
+        {
+          "title": "Washroom candidate \u2014 Marayoor [synthetic]",
+          "data_id": "synthetic-washroom-candidate-\u2014-marayoor-[synthetic]",
+          "address": "Synthetic fixture location; confirm before travel",
+          "rating": 4.2,
+          "gps_coordinates": {
+            "latitude": 10.2769,
+            "longitude": 77.1629
+          }
+        }
+      ]
+    }
+  },
+  "places:route:rest": {
+    "_engine": "google_maps",
+    "_provenance": "synthetic test input",
+    "response": {
+      "local_results": [
+        {
+          "title": "Rest candidate \u2014 Pollachi [synthetic]",
+          "data_id": "synthetic-rest-candidate-\u2014-pollachi-[synthetic]",
+          "address": "Synthetic fixture location; confirm before travel",
+          "rating": 4.2,
+          "gps_coordinates": {
+            "latitude": 10.6588,
+            "longitude": 77.0072
+          }
+        },
+        {
+          "title": "Rest candidate \u2014 Udumalpet [synthetic]",
+          "data_id": "synthetic-rest-candidate-\u2014-udumalpet-[synthetic]",
+          "address": "Synthetic fixture location; confirm before travel",
+          "rating": 4.2,
+          "gps_coordinates": {
+            "latitude": 10.5847,
+            "longitude": 77.2403
+          }
+        },
+        {
+          "title": "Rest candidate \u2014 Marayoor [synthetic]",
+          "data_id": "synthetic-rest-candidate-\u2014-marayoor-[synthetic]",
+          "address": "Synthetic fixture location; confirm before travel",
+          "rating": 4.2,
+          "gps_coordinates": {
+            "latitude": 10.2769,
+            "longitude": 77.1629
+          }
+        }
+      ]
+    }
+  },
+  "places:munnar:food": {
+    "_engine": "google_maps",
+    "_provenance": "synthetic test input",
+    "response": {
+      "local_results": [
+        {
+          "title": "Vegetarian lunch \u2014 Munnar [synthetic]",
+          "data_id": "synthetic-vegetarian-lunch-\u2014-munnar-[synthetic]",
+          "address": "Synthetic fixture location; confirm before travel",
+          "rating": 4.2,
+          "gps_coordinates": {
+            "latitude": 10.089,
+            "longitude": 77.06
+          }
+        }
+      ]
+    }
+  },
+  "search:munnar:advisory": {
+    "_engine": "google",
+    "_provenance": "synthetic test input",
+    "response": {
+      "organic_results": [
+        {
+          "title": "Kerala Tourism",
+          "link": "https://www.keralatourism.org/",
+          "snippet": "Synthetic advisory fixture: consult official attraction rules, closures and permits before departure."
+        }
+      ]
+    }
+  }
+}
