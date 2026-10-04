@@ -60,14 +60,35 @@ def stop_progress(
     if not candidate.location or not leg_steps:
         return leg_duration_min // 2, 15  # conservative default when no geometry
     idx, detour_km = nearest_step_index((candidate.location.lat, candidate.location.lng), leg_steps)
-    total_seconds = sum(s.get("duration_s") or 0 for s in leg_steps)
-    progress = (round(leg_duration_min * sum(s.get("duration_s") or 0 for s in leg_steps[:idx]) / total_seconds)
-                if total_seconds else round(leg_duration_min * idx / max(1, len(leg_steps) - 1)))
+    distances = route_distances(leg_steps)
+    progress = round(leg_duration_min * distances[idx] / distances[-1]) if distances[-1] else 0
     if detour_km == float("inf"):
         return leg_duration_min // 2, 999
     # Off-route surface streets ≈ 30 km/h effective for the round-trip detour.
     detour = max(2, round(detour_km / 30 * 60))
     return progress, detour
+
+
+def route_distances(steps):
+    """Cumulative geometry distance; turn density is not elapsed travel time."""
+    distances, total, previous = [], 0.0, None
+    for step in steps:
+        current = _coord(step)
+        if current and previous:
+            total += haversine_km(previous, current)
+        if current:
+            previous = current
+        distances.append(total)
+    return distances or [0.0]
+
+
+def route_midpoint(route):
+    steps = [s.model_dump() for s in route.legs[0].steps]
+    distances = route_distances(steps)
+    for i, distance in enumerate(distances):
+        if distance >= distances[-1] / 2 and i < len(route.legs[0].steps):
+            return route.legs[0].steps[i].gps_coordinates
+    return route.legs[0].from_point
 
 
 def pick_best(
@@ -85,7 +106,7 @@ def pick_best(
         if c.id in taken_ids or c.category != category:
             continue
         progress, detour = stop_progress(c, leg_steps, leg_duration_min)
-        if detour > 20:
+        if detour > 20 or abs(progress - target_minutes) > 60:
             continue  # a large detour is not "on the way"
         score = abs(progress - target_minutes) + detour * 2
         if category == PlaceCategory.restaurant and preferences and preferences.vegetarian:
@@ -178,24 +199,16 @@ def plan_stops(
 
     # --- Rest break every break_every_minutes of continuous travel.
     last_break = 0
-    rest = None
-    while True:
-        target = last_break + road.break_every_minutes
-        if target >= total_min - 20:
-            break
+    for target in range(road.break_every_minutes, total_min - 20, road.break_every_minutes):
+        # A meal, fuel or washroom stop already supplies a break in this window.
+        if any(abs(s.progress_minutes - target) <= 35 for s in stops):
+            continue
         rest = pick_best(rests, PlaceCategory.rest, target, leg_steps, total_min, taken)
         if not rest:
             break
         progress, detour = stop_progress(rest, leg_steps, total_min)
-        if progress <= last_break + 20:
-            # Nudge the candidate window to avoid an impossible clustering.
-            rest = pick_best(
-                [c for c in rests if c.id != rest.id],
-                PlaceCategory.rest, target + 45, leg_steps, total_min, taken,
-            )
-            if not rest:
-                break
-            progress, detour = stop_progress(rest, leg_steps, total_min)
+        if progress <= last_break + 30 or abs(progress - target) > 45:
+            continue
         arrive = add_minutes(departure, progress)
         dwell = 15
         stops.append(StopPlan(

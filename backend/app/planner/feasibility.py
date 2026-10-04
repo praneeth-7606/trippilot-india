@@ -111,7 +111,12 @@ def check(req: TripRequest, itinerary: ItineraryVersion) -> list[FeasibilityIssu
             if a.type != ActivityType.attraction or not a.place:
                 continue
             hours = a.place.opening_hours
-            if not hours or (hours.weekday_open is None and hours.weekday_close is None):
+            opening, closing, closed = hours.for_day(day.day) if hours else (None, None, False)
+            if closed:
+                issues.append(FeasibilityIssue(code="closed_on_trip_day", severity="error",
+                    message=f"{a.name} is listed as closed on {day.day.strftime('%A')}.", related_activity_ids=[a.id]))
+                continue
+            if opening is None and closing is None:
                 issues.append(FeasibilityIssue(
                     code="opening_hours_unknown",
                     severity=FeasibilitySeverity.warning,
@@ -119,22 +124,22 @@ def check(req: TripRequest, itinerary: ItineraryVersion) -> list[FeasibilityIssu
                     related_activity_ids=[a.id],
                 ))
                 continue
-            if hours.weekday_open and minutes_of(a.planned_start) < minutes_of(hours.weekday_open):
+            if opening and minutes_of(a.planned_start) < minutes_of(opening):
                 issues.append(FeasibilityIssue(
                     code="closed_at_arrival",
                     severity=FeasibilitySeverity.error,
                     message=(
-                        f"{a.name} opens at {hours.weekday_open.strftime('%H:%M')} but the plan "
+                        f"{a.name} opens at {opening.strftime('%H:%M')} but the plan "
                         f"arrives at {a.planned_start.strftime('%H:%M')}."
                     ),
                     related_activity_ids=[a.id],
                 ))
-            if hours.weekday_close and minutes_of(a.planned_end) > minutes_of(hours.weekday_close):
+            if closing and minutes_of(a.planned_end) > minutes_of(closing):
                 issues.append(FeasibilityIssue(
                     code="closed_during_visit",
                     severity=FeasibilitySeverity.warning,
                     message=(
-                        f"{a.name} closes at {hours.weekday_close.strftime('%H:%M')} but the plan "
+                        f"{a.name} closes at {closing.strftime('%H:%M')} but the plan "
                         f"leaves at {a.planned_end.strftime('%H:%M')}."
                     ),
                     related_activity_ids=[a.id],

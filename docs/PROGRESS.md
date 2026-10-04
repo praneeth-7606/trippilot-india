@@ -19,10 +19,23 @@ Important fixes verified by regression tests: all vehicles count toward fuel est
 
 ## Next implementation slice
 
-1. Add `SERPAPI_API_KEY` locally; verify live two-wheeler routes, place results and official-information lookup.
-2. Replace estimated detours and destination hops with routed measurements, and add day-specific closure handling and complete fuel-state tracking.
+1. Live API verification and local demo recording are now complete (see checkpoint below).
+2. Road-stop legs now use routed measurements and weekly listing closures are handled. Destination-leg routing and complete fuel-state tracking remain.
 3. Add PostgreSQL persistence, hotel comparison and more capable conflict-resolving replanning.
 4. Select the in-product LLM provider and add natural-language clarification against the existing typed request.
 5. Complete dashboard draft/final submission using the real community/source and participant declarations; record a local live demo under three minutes.
 
 For an interruption: preserve the repository and use the README's setup commands. Trip records are currently ephemeral; recreating a trip is expected after a backend restart.
+
+## Live checkpoint — October 5, 2026 IST
+
+- Backend key is present in the Git-ignored local `.env`; no credential is printed or committed.
+- Real two-wheeler direct route: **150.3 km / 232 min**.
+- Verified outbound stop chain: **152.7 km / 254 min**, **+22 min** versus direct, excluding stop dwell time.
+- Verified return stop chain: **161.3 km / 265 min**, **+21 min** versus direct.
+- Live plan reports `ready` with explicit warnings for attractions lacking published hours. The run made 15 provider requests within the 40-request plan budget; SerpApi's own cache may make some requests free.
+- Broad stop queries returned no results. Replaced them with geographically biased category searches; fixed an additional clustered-break bug exposed by real result density.
+- **18 tests pass**. Live browser workflow and production frontend build pass; no page exceptions at the checked viewport sizes.
+- Recorded a genuine local-screen video: **48.4 seconds**, **1280×900**, WebM/VP8. A frame was decoded and visually checked before publication.
+- Participant confirmed **HydPy**, **solo**, and manual entry of personal fields.
+- GitHub dashboard authentication, saved draft and final submission must be verified separately; they are not implied by code/video completion.

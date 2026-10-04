@@ -13,7 +13,9 @@ Built for the [SerpApi India Hackathon 2026](https://serpapi.github.io/serpapi-i
 - Leaflet/OpenStreetMap map synchronized with timeline selection. Waypoint lines are schematic, not turn-by-turn geometry.
 - Lock/skip activities, apply a 90-minute delay, keep prior versions, share a read-only link and print a summary.
 
-**Default demo is synthetic.** With no backend SerpApi key, the Coimbatore ↔ Munnar scenario uses explicitly labelled generated test data. It is not a recording of real search results. Other routes require a live key. Live calls have not yet been verified in this repository.
+**Live workflow verified.** The Coimbatore ↔ Munnar motorcycle scenario was tested against real SerpApi Maps, Directions and Google Search responses. Without a backend key, the application still offers explicitly labelled synthetic fixtures. Synthetic fixtures are not recordings of real results.
+
+[Local live demo recording (48.4 seconds)](docs/trippilot-live-demo.webm) — shows the running app, real route/stop evidence, a locked activity and delay handling. No API key is visible or included in the recording.
 
 ## Run locally on Windows
 
@@ -75,8 +77,8 @@ Regenerate synthetic fixtures from `backend/`: `.venv/Scripts/python.exe fixture
 
 - Phase 1 accepts one road destination and up to 16 days in `Asia/Kolkata`. Natural-language parsing and an in-product LLM provider are not wired yet.
 - Trip records and versions are **in memory**, and disappear on backend restart. PostgreSQL persistence is Phase 2 work. Sharing works only while that backend retains the trip.
-- Stop placement uses route-step coordinates and approximate off-route travel time. Destination hops also use geometric estimates, not extra Directions calls. Dense route geometry, routed detour validation and overnight waypoint towns are future work.
-- Published hours may be incomplete; weekday/holiday closure handling and complete day-specific hours still need expansion.
+- Stop discovery is biased to the route's geometry midpoint. Selected road stops are verified with actual Directions legs; the plan shows the extra driving time versus the direct route. If verification fails, estimates remain labelled partial. Destination hops still use geometric estimates. Overnight waypoint towns are future work.
+- Weekly listing hours are checked against the actual trip weekday. Missing hours, split sessions and holiday exceptions still need confirmation rather than being inferred from an "open now" badge.
 - Fuel calculations include vehicle counts. Fuel-stop suggestions assume a full tank at each leg's start; tank-state tracking through the entire trip and availability confirmation are not implemented.
 - Cost figures are **fuel/food subtotals** based on displayed assumptions; accommodation, tickets, tolls and local travel are excluded. Hotel/flight searches and actual bookings are not implemented.
 - Delay handling shifts unlocked items and reports resulting conflicts; it does not claim to resolve every infeasible delay automatically.
@@ -84,7 +86,7 @@ Regenerate synthetic fixtures from `backend/`: `.venv/Scripts/python.exe fixture
 
 ## Hackathon preparation and AI disclosure
 
-[Submission preparation, draft text and demo outline](docs/HACKATHON.md). A public repository is ready; dashboard registration/draft/final submission and the demo video are still pending.
+[Submission preparation, draft text and demo outline](docs/HACKATHON.md). Public code and a verified local demo are ready. Dashboard draft/final submission still depend on participant sign-in and personal fields.
 
 **OpenCode, powered by OpenAI gpt-6.1-sol**, assisted with planning, code, tests, debugging and documentation. The current application schedules deterministically; no in-product model calls are enabled. Disclose AI assistance in the event form as well.
 

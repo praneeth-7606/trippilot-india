@@ -297,19 +297,22 @@ def build_days(
 
         used = 0
         current_place = anchor_place
-        while scheduled_pool and used < capacity and (win_end_min - win_start_min) >= 60:
-            cand = scheduled_pool[0]
+        for cand in list(scheduled_pool):
+            if used >= capacity or (win_end_min - win_start_min) < 60:
+                break
             travel = intra_city_minutes(current_place, cand) if current_place else 15
             visit = cand.estimated_visit_minutes or 60
             slot_start = win_start_min + used + travel
             # Never arrive before published opening hours.
-            if cand.opening_hours and cand.opening_hours.weekday_open:
-                slot_start = max(slot_start, minutes_of(cand.opening_hours.weekday_open))
-            close_min = (minutes_of(cand.opening_hours.weekday_close)
-                         if cand.opening_hours and cand.opening_hours.weekday_close else win_end_min)
+            opening, closing, closed = cand.opening_hours.for_day(day) if cand.opening_hours else (None, None, False)
+            if closed:
+                continue
+            if opening:
+                slot_start = max(slot_start, minutes_of(opening))
+            close_min = minutes_of(closing) if closing else win_end_min
             if slot_start + visit > min(win_end_min, close_min) or used + travel + visit > capacity:
-                break
-            scheduled_pool.pop(0)
+                continue
+            scheduled_pool.remove(cand)
             start_dt = at(day, time_of(slot_start))
             acts.append(_attraction_activity(req, cand, day, start_dt, travel, idx, current_place or cand))
             used = (slot_start - win_start_min) + visit

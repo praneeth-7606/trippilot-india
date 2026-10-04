@@ -7,6 +7,7 @@ import json
 import re
 from datetime import time as dtime
 from typing import Optional
+from urllib.parse import urlencode
 
 from app.models.itinerary import (
     EvidenceKind,
@@ -57,6 +58,10 @@ def _opening_hours(item: dict, resp: ProviderResponse) -> Optional[OpeningHours]
         note="fixture response" if resp.fixture else "parsed from provider listing text",
     )
     oh = item.get("opening_hours")
+    weekly = item.get("operating_hours")
+    if isinstance(weekly, dict):
+        return OpeningHours(weekly={k.lower(): v for k, v in weekly.items() if isinstance(v, str)},
+                            raw=json.dumps(weekly), source=evidence)
     if isinstance(oh, dict) and (oh.get("open") or oh.get("close")):
         return OpeningHours(
             weekday_open=_parse_clock(str(oh.get("open", ""))),
@@ -69,16 +74,7 @@ def _opening_hours(item: dict, resp: ProviderResponse) -> Optional[OpeningHours]
     text = item.get("open_state") or ""
     if not isinstance(text, str) or not text:
         return None
-    op = re.search(r"Opens?\s+([0-9:]+\s*(?:am|pm)?)", text, re.I)
-    cl = re.search(r"Closes?\s+([0-9:]+\s*(?:am|pm)?)", text, re.I)
-    if not op and not cl:
-        return None
-    return OpeningHours(
-        weekday_open=_parse_clock(op.group(1)) if op else None,
-        weekday_close=_parse_clock(cl.group(1)) if cl else None,
-        raw=text,
-        source=evidence,
-    )
+    return OpeningHours(raw=text, source=evidence)
 
 
 def parse_places(
@@ -87,20 +83,22 @@ def parse_places(
     default_visit_minutes: int | None = None,
 ) -> list[PlaceCandidate]:
     results = resp.data.get("local_results") or resp.data.get("places") or []
+    if not results and isinstance(resp.data.get("place_results"), dict):
+        results = [resp.data["place_results"]]
     places: list[PlaceCandidate] = []
     for item in results:
         coords = item.get("gps_coordinates") or {}
-        location = (
-            GeoPoint(lat=coords["latitude"], lng=coords["longitude"]) if coords else None
-        )
+        location = (GeoPoint(lat=coords["latitude"], lng=coords["longitude"])
+                    if coords.get("latitude") is not None and coords.get("longitude") is not None else None)
         hours_raw = item.get("open_state") or item.get("hours")
         sources = list(resp.sources)
-        if item.get("data_id"):
+        if item.get("title"):
             sources.append(
                 SourceEvidence(
                     kind=EvidenceKind.retrieved,
                     engine=resp.engine,
-                    url=f"https://serpapi.com/{resp.engine}?data_id={item['data_id']}",
+                    url="https://www.google.com/maps/search/?" + urlencode({"api": 1,
+                        "query": item["title"], **({"query_place_id": item["place_id"]} if item.get("place_id") else {})}),
                     title=item.get("title"),
                     retrieved_at=resp.retrieved_at,
                     note="fixture response" if resp.fixture else None,
@@ -138,7 +136,7 @@ class MapsService:
         extra_query: str | None = None,
     ) -> list[PlaceCandidate]:
         full_query = " ".join(filter(None, [query, extra_query]))
-        params: dict = {"q": full_query, "gl": "in", "hl": "en"}
+        params: dict = {"q": full_query, "type": "search", "gl": "in", "hl": "en"}
         if near:
             params["ll"] = f"@{near.lat},{near.lng},14z"
         resp = self.serpapi.search("google_maps", params, fixture_key=fixture_key)

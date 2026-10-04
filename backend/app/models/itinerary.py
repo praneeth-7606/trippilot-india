@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date, datetime, time
 from enum import Enum
+import re
 from typing import Optional
 
 from pydantic import BaseModel, Field
@@ -47,6 +48,31 @@ class OpeningHours(BaseModel):
     sunday_close: Optional[time] = None
     raw: Optional[str] = None
     source: Optional[SourceEvidence] = None
+    weekly: dict[str, str] = Field(default_factory=dict)
+
+    def for_day(self, day: date):
+        """Return (opens, closes, explicitly_closed) for the requested weekday.
+
+        Split sessions or ambiguous formats remain unknown rather than inventing
+        an uninterrupted interval. Today's 'open now' badge is not a schedule.
+        """
+        if self.weekly:
+            raw = self.weekly.get(day.strftime("%A").lower(), "")
+            if raw.strip().lower() == "closed":
+                return None, None, True
+            if "24 hours" in raw.lower():
+                return time(0), time(23, 59), False
+            clocks = re.findall(r"(\d{1,2})(?::(\d{2}))?\s*(AM|PM)", raw, re.I)
+            if len(clocks) != 2:
+                return None, None, False
+            values = []
+            for hour, minute, ampm in clocks:
+                h = int(hour) % 12 + (12 if ampm.upper() == "PM" else 0)
+                values.append(time(h, int(minute or 0)))
+            return values[0], values[1], False
+        if day.weekday() == 6 and (self.sunday_open or self.sunday_close):
+            return self.sunday_open, self.sunday_close, False
+        return self.weekday_open, self.weekday_close, False
 
 
 class PlaceCandidate(BaseModel):
