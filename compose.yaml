@@ -1,0 +1,16 @@
+services:
+  backend:
+    build: ./backend
+    ports: ["127.0.0.1:8000:8000"]
+    environment:
+      SERPAPI_API_KEY: ${SERPAPI_API_KEY:-}
+      TRIPPILOT_FIXTURES: ${TRIPPILOT_FIXTURES:-0}
+      REDIS_URL: redis://redis:6379/0
+    depends_on: [redis]
+  frontend:
+    build: ./frontend
+    ports: ["127.0.0.1:8080:80"]
+    depends_on: [backend]
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--maxmemory", "64mb", "--maxmemory-policy", "allkeys-lru"]
