@@ -39,4 +39,6 @@ Verified against the official rules and dashboard on 2026-10-04.
 
 Use a publicly accessible video link that opens in an incognito window. The rules require a local screen recording under three minutes; narration and polished editing are optional.
 
-Live Maps/Directions/Search calls have now been verified and a **48.4-second local screen recording** is available in `docs/trippilot-live-demo.webm`. The recording shows actual app interaction without mocked responses. A publicly accessible hosted video link and its incognito check are required before final submission. Hotel/flight searches remain future work.
+Live Maps/Directions/Search calls have now been verified and a **48.4-second local screen recording** is available in `docs/trippilot-live-demo.webm`. The recording shows actual app interaction without mocked responses. Hotel/flight searches remain future work.
+
+**Demo video (public, anyone-with-link):** https://drive.google.com/file/d/1cEUahYTkiyAgAoOk39_CN77nU-6Gh8U9/view?usp=drivesdk — verified viewable without sign-in on 2026-10-04. Paste this into the dashboard `demo_url` field and re-check it in an incognito window before final submission.
