@@ -1,4 +1,5 @@
 from datetime import time
+from concurrent.futures import ThreadPoolExecutor
 from test_planner import request, itinerary, route
 from app.planner.feasibility import check
 from app.planner.replan import apply_delay
@@ -6,10 +7,28 @@ from app.planner.scheduler import build_budget
 from app.planner.pipeline import PlanningPipeline
 from app.services.serpapi import SearchBudget
 from app.models.itinerary import PlaceCandidate, OpeningHours
+from app.services.store import TripStore
 
 
 def test_per_person_budget_with_room_to_spare():
     assert build_budget(request(budget={"per_person_inr": 1500}), route(), route()).within_budget
+
+
+def test_budget_includes_explicit_stay_toll_ticket_and_local_transport_assumptions():
+    result = build_budget(
+        request(
+            accommodation={"rooms": 2, "budget_per_night_inr": 2000},
+            budget={"per_person_inr": 5000, "tolls_inr": 300, "activities_inr": 1200, "local_transport_inr": 400},
+        ),
+        route(),
+        route(),
+    )
+
+    amounts = {line.category: line.amount_inr for line in result.lines}
+    assert amounts["accommodation"] == 4000
+    assert amounts["tolls"] == 300
+    assert amounts["activities"] == 1200
+    assert amounts["local transport"] == 400
 
 
 def test_locked_activity_does_not_shift():
@@ -73,3 +92,60 @@ def test_editing_creates_a_new_version_and_rechecks_must_visit(monkeypatch):
     assert new["status"] == "partial"
     original = get_store().get(trip_id).versions[0]
     assert all(a.status != "skipped" for d in original.days for a in d.activities)
+
+
+def test_store_assigns_distinct_versions_when_two_plans_finish_together():
+    store = TripStore()
+    trip = store.create(request())
+    first = itinerary()
+    second = itinerary()
+
+    store.add_version(trip.id, first)
+    store.add_version(trip.id, second)
+
+    assert [version.version for version in store.get(trip.id).versions] == [1, 2]
+
+
+def test_store_assigns_unique_versions_under_concurrent_completions():
+    store = TripStore()
+    trip = store.create(request())
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        list(executor.map(lambda _: store.add_version(trip.id, itinerary()), range(8)))
+
+    assert [version.version for version in store.get(trip.id).versions] == list(range(1, 9))
+
+
+def test_malformed_start_date_is_rejected_with_422():
+    from fastapi.testclient import TestClient
+    from app.main import app
+    client = TestClient(app, raise_server_exceptions=False)
+    payload = request().model_dump(mode="json")
+    payload["start_date"] = "not-a-date"
+    assert client.post("/trips", json=payload).status_code == 422
+
+
+def test_empty_origin_is_rejected_with_422():
+    from fastapi.testclient import TestClient
+    from app.main import app
+    client = TestClient(app, raise_server_exceptions=False)
+    payload = request().model_dump(mode="json")
+    payload["origin"] = ""
+    assert client.post("/trips", json=payload).status_code == 422
+
+
+def test_blank_destination_is_rejected_with_422():
+    from fastapi.testclient import TestClient
+    from app.main import app
+    client = TestClient(app, raise_server_exceptions=False)
+    payload = request().model_dump(mode="json")
+    payload["destinations"] = ["   "]
+    assert client.post("/trips", json=payload).status_code == 422
+
+
+def test_share_before_plan_is_rejected_with_409():
+    from fastapi.testclient import TestClient
+    from app.main import app
+    client = TestClient(app)
+    trip_id = client.post("/trips", json=request().model_dump(mode="json")).json()["id"]
+    assert client.post(f"/trips/{trip_id}/share").status_code == 409

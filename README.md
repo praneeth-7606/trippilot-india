@@ -6,10 +6,13 @@ Built for the [SerpApi India Hackathon 2026](https://serpapi.github.io/serpapi-i
 
 ## Phase 1 preview
 
-- Structured trip form: origin, destination, outbound/return dates and times, group size, car/motorcycle, vehicle count/mileage, budget, pace, daylight limits and must-visits.
+- Structured trip form: origin, up to 4 destinations in visit order, outbound/return dates and times, group size, car/motorcycle, vehicle count/mileage, budget, pace, daylight limits and must-visits.
+- Optional Mistral Trip Copilot: turns a natural-language road-trip description into a validated draft or asks for the missing constraints. It never invents routes, prices or bookings.
+- Vacation chat agent: multi-turn conversation that collects a multi-stop holiday intent and builds the routed plan with per-city stays. Drafts validate against the same typed contract.
 - LangGraph workflow: provider research → route-stop suggestions → deterministic scheduling and feasibility validation.
 - SerpApi Maps/Directions/Search adapters with timeouts, a search budget and response caching. Directions uses `travel_mode=9` for motorcycles and `0` for cars.
-- Day-by-day itinerary, source evidence, exclusions, route alternatives, weather and a **partial** cost estimate.
+- Route choice: every plan lists the available routes with distance/time; picking one rebuilds stops, stays and costs around it.
+- Day-by-day itinerary, source evidence, exclusions, route alternatives, per-city hotel search links, weather and a **partial** cost estimate.
 - Leaflet/OpenStreetMap map synchronized with timeline selection. Waypoint lines are schematic, not turn-by-turn geometry.
 - Lock/skip activities, apply a 90-minute delay, keep prior versions, share a read-only link and print a summary.
 
@@ -45,6 +48,10 @@ Open **http://127.0.0.1:5173**. Backend docs: **http://127.0.0.1:8000/docs**.
 
 Set `SERPAPI_API_KEY` on the backend and `TRIPPILOT_FIXTURES=0`. Never put secrets in frontend variables. The workflow issues Maps/Directions requests plus a Google (`engine=google`) visitor-information lookup; the default per-plan search budget is 40 uncached requests. Cached synthetic responses and live responses are separated.
 
+### Natural-language intake
+
+Set `MISTRAL_API_KEY` and an account-available `MISTRAL_MODEL` in `backend/.env`. The copilot uses Mistral JSON mode only to create a `TripRequest` draft and clarification questions; the existing Pydantic validators and deterministic planner remain authoritative. A missing or rate-limited Mistral account leaves the structured form fully usable.
+
 Open-Meteo is keyless; forecast data is unavailable beyond its supported window. Directions navigation links open Google Maps; explicitly confirm motorcycle mode in the navigation application.
 
 ## Verification
@@ -75,12 +82,12 @@ Regenerate synthetic fixtures from `backend/`: `.venv/Scripts/python.exe fixture
 
 ## Current boundaries
 
-- Phase 1 accepts one road destination and up to 16 days in `Asia/Kolkata`. Natural-language parsing and an in-product LLM provider are not wired yet.
+- Trips accept 1–4 road destinations in visit order and up to 16 days in `Asia/Kolkata`. Trains, flights and live hotel/flight booking remain later slices; stays use your estimates plus hotel search links.
 - Trip records and versions are **in memory**, and disappear on backend restart. PostgreSQL persistence is Phase 2 work. Sharing works only while that backend retains the trip.
 - Stop discovery is biased to the route's geometry midpoint. Selected road stops are verified with actual Directions legs; the plan shows the extra driving time versus the direct route. If verification fails, estimates remain labelled partial. Destination hops still use geometric estimates. Overnight waypoint towns are future work.
 - Weekly listing hours are checked against the actual trip weekday. Missing hours, split sessions and holiday exceptions still need confirmation rather than being inferred from an "open now" badge.
 - Fuel calculations include vehicle counts. Fuel-stop suggestions assume a full tank at each leg's start; tank-state tracking through the entire trip and availability confirmation are not implemented.
-- Cost figures are **fuel/food subtotals** based on displayed assumptions; accommodation, tickets, tolls and local travel are excluded. Hotel/flight searches and actual bookings are not implemented.
+- Cost figures include fuel/food assumptions plus any accommodation, toll, ticket and local-transport values supplied by the traveller. They are not live hotel, toll or ticket quotes; hotel/flight searches and bookings are not implemented.
 - Delay handling shifts unlocked items and reports resulting conflicts; it does not claim to resolve every infeasible delay automatically.
 - Local preview only: authentication, durable storage and public-deployment access controls need implementation before handling real private trips on the internet.
 

@@ -83,6 +83,8 @@ class Budget(BaseModel):
     food_inr: Optional[int] = Field(default=None, ge=0)
     fuel_inr: Optional[int] = Field(default=None, ge=0)
     activities_inr: Optional[int] = Field(default=None, ge=0)
+    tolls_inr: Optional[int] = Field(default=None, ge=0)
+    local_transport_inr: Optional[int] = Field(default=None, ge=0)
 
     @property
     def effective_total_inr(self) -> Optional[int]:
@@ -137,19 +139,34 @@ class TripRequest(BaseModel):
             raise ValueError("Phase 1 supports cars and motorcycles only")
         return value
 
+    @field_validator("origin")
+    @classmethod
+    def non_empty_origin(cls, value):
+        if not value.strip():
+            raise ValueError("origin must not be empty")
+        return value.strip()
+
     @field_validator("destinations")
     @classmethod
-    def one_destination(cls, value):
-        if len(value) != 1:
-            raise ValueError("Phase 1 supports one destination plus the return journey")
-        return value
+    def one_to_four_destinations(cls, value):
+        if not 1 <= len(value) <= 4:
+            raise ValueError("Trips support 1 to 4 destinations in route order")
+        cleaned = [v.strip() for v in value]
+        if any(not v for v in cleaned):
+            raise ValueError("destination must not be empty")
+        if len(set(v.lower() for v in cleaned)) != len(cleaned):
+            raise ValueError("destinations must not repeat")
+        return cleaned
 
     @field_validator("return_date")
     @classmethod
     def return_after_start(cls, v: Optional[date], info):
-        if v and info.data.get("start_date") and v < info.data["start_date"]:
+        start = info.data.get("start_date")
+        if not v or not isinstance(start, date):
+            return v
+        if v < start:
             raise ValueError("return_date cannot be before start_date")
-        if v and (v - info.data["start_date"]).days > 15:
+        if (v - start).days > 15:
             raise ValueError("Trips are limited to 16 days in Phase 1")
         return v
 

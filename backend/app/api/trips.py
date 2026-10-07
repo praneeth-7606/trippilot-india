@@ -16,6 +16,7 @@ from app.models.trip import TripRequest
 from app.planner.pipeline import PlanningPipeline
 from app.planner.replan import apply_delay
 from app.planner.feasibility import check
+from app.services.copilot import MistralTripCopilot
 from app.services.store import get_store
 
 router = APIRouter(prefix="/trips", tags=["trips"])
@@ -40,14 +41,60 @@ class ShareResponse(BaseModel):
     share_url: str
 
 
+class IntakeRequest(BaseModel):
+    message: str = Field(min_length=10, max_length=4000)
+
+
+class IntakeResponse(BaseModel):
+    request: Optional[TripRequest] = None
+    clarifications: list[str]
+
+
+class PlanRequest(BaseModel):
+    route_option: int = Field(default=0, ge=0, le=10)
+
+
+class ChatMessage(BaseModel):
+    role: str = Field(pattern="^(user|assistant)$")
+    content: str = Field(min_length=1, max_length=4000)
+
+
+class ConverseRequest(BaseModel):
+    messages: list[ChatMessage] = Field(min_length=1, max_length=20)
+
+
+class ConverseResponse(BaseModel):
+    reply: str
+    request: Optional[TripRequest] = None
+    clarifications: list[str] = Field(default_factory=list)
+
+
 @router.post("", status_code=201)
 def create_trip(request: TripRequest):
     trip = get_store().create(request)
     return {"id": trip.id, "created_at": trip.created_at, "status": trip.status}
 
 
+@router.post("/intake", response_model=IntakeResponse)
+def intake_trip(body: IntakeRequest):
+    try:
+        result = MistralTripCopilot().intake(body.message)
+    except RuntimeError as exc:
+        raise HTTPException(503, str(exc)) from None
+    return IntakeResponse(request=result.request, clarifications=result.clarifications)
+
+
+@router.post("/converse", response_model=ConverseResponse)
+def converse(body: ConverseRequest):
+    try:
+        result = MistralTripCopilot().converse([m.model_dump() for m in body.messages])
+    except RuntimeError as exc:
+        raise HTTPException(503, str(exc)) from None
+    return ConverseResponse(reply=result.reply, request=result.request, clarifications=result.clarifications)
+
+
 @router.post("/{trip_id}/plan", response_model=PlanResponse)
-def plan_trip(trip_id: str):
+def plan_trip(trip_id: str, body: Optional[PlanRequest] = None):
     store = get_store()
     trip = store.get(trip_id)
     if not trip:
@@ -56,7 +103,8 @@ def plan_trip(trip_id: str):
     trip.emit("plan_started", "Parsing request and validating constraints.")
     pipeline = PlanningPipeline()
     trip.emit("route", "Retrieving route candidates.")
-    version = pipeline.plan(trip.request, version=len(trip.versions) + 1)
+    version = pipeline.plan(trip.request, version=len(trip.versions) + 1,
+                            route_option=body.route_option if body else 0)
     trip.emit("schedule", "Building the day-by-day timeline with route-aware stops.")
     trip.emit("validated", f"Feasibility checks complete: {len(version.issues)} issue(s).")
 
@@ -146,6 +194,8 @@ def share_trip(trip_id: str):
     trip = store.get(trip_id)
     if not trip:
         raise HTTPException(404, "trip not found")
+    if not trip.current:
+        raise HTTPException(409, "no plan yet")
     if not trip.share_token:
         trip.share_token = uuid.uuid4().hex
     return ShareResponse(share_url=f"/trips/shared/{trip.share_token}")

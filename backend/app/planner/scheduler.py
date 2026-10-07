@@ -7,7 +7,7 @@ from SPEC.md so results are reproducible and testable.
 from __future__ import annotations
 
 import hashlib
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 from typing import Optional
 
 from app.models.itinerary import (
@@ -366,11 +366,177 @@ def build_days(
     return day_plans, excluded, anchor_place
 
 
-def build_budget(req: TripRequest, route_out: RouteOption, route_back: RouteOption) -> BudgetSummary:
+def _fill_attractions(req, day, win_start_min, win_end_min, pool, destination_food, anchor_place, idx):
+    """Schedule attraction visits inside one day window. Returns (acts, idx)."""
+    acts: list[Activity] = []
+    used = 0
+    current_place = anchor_place
+    capacity = PACE_DAILY_VISIT_MINUTES[req.pace]
+    for cand in list(pool):
+        if used >= capacity or (win_end_min - win_start_min) < 60:
+            break
+        travel = intra_city_minutes(current_place, cand) if current_place else 15
+        visit = cand.estimated_visit_minutes or 60
+        slot_start = win_start_min + used + travel
+        opening, closing, closed = cand.opening_hours.for_day(day) if cand.opening_hours else (None, None, False)
+        if closed:
+            continue
+        if opening:
+            slot_start = max(slot_start, minutes_of(opening))
+        close_min = minutes_of(closing) if closing else win_end_min
+        if slot_start + visit > min(win_end_min, close_min) or used + travel + visit > capacity:
+            continue
+        pool.remove(cand)
+        start_dt = at(day, time_of(slot_start))
+        acts.append(_attraction_activity(req, cand, day, start_dt, travel, idx, current_place or cand))
+        used = (slot_start - win_start_min) + visit
+        current_place = cand
+        idx += 1
+        if destination_food and 12 * 60 <= minutes_of(acts[-1].planned_end) < 13 * 60 and slot_start + visit + 45 < win_end_min:
+            lunch_place = destination_food[0]
+            lunch_start = at(day, acts[-1].planned_end)
+            acts.append(Activity(
+                id=_id(lunch_place.name, day, idx),
+                type=ActivityType.meal,
+                name=lunch_place.name,
+                day=day,
+                planned_start=acts[-1].planned_end,
+                planned_end=(lunch_start + timedelta(minutes=45)).timetz().replace(tzinfo=None),
+                place=lunch_place,
+                explanation="Lunch placed around 13:00 with a vegetarian option.",
+                sources=lunch_place.sources,
+            ))
+            used += 45
+            idx += 1
+    return acts, idx
+
+
+def _checkin_activity(city: str, day: date, arrival: datetime, nights: int) -> Activity:
+    return Activity(
+        id=_id(f"checkin-{city}", day, 0),
+        type=ActivityType.accommodation,
+        name=f"Check-in — {city}",
+        day=day,
+        planned_start=arrival.timetz().replace(tzinfo=None),
+        planned_end=(arrival + timedelta(minutes=CHECKIN_MINUTES)).timetz().replace(tzinfo=None),
+        status=ActivityStatus.planned,
+        explanation=(f"Stay in {city} for {nights} night(s); room costs use your estimate. "
+                     "No reservation made — use the hotel search link in planning assumptions."),
+        sources=[_calculated_source("Check-in placeholder; no reservation made.")],
+    )
+
+
+def build_route_days(
+    req: TripRequest,
+    segments: list[dict],
+    route_back: RouteOption,
+    stops_back: list[StopPlan],
+    drop_count: int = 0,
+) -> tuple[list[DayPlan], list[ExcludedActivity], PlaceCandidate | None]:
+    """Multi-city timeline. Each segment is {city, route, stops, attractions, food}.
+
+    Travel legs run on their own days; leftover days become stay days per city.
+    Returns (days, excluded, anchor).
+    """
+    excluded: list[ExcludedActivity] = []
+    start = req.start_date
+    ret = req.return_date or start
+    total_days = (ret - start).days + 1
+
+    pools: list[dict] = []
+    for seg in segments:
+        attractions = seg["attractions"]
+        must = [a for a in attractions if any(m.lower() in a.name.lower() for m in req.must_visit)]
+        rest = [a for a in attractions if a not in must]
+        rest.sort(key=lambda a: (-(a.rating or 0), a.name))
+        anchor = attractions[0] if attractions else None
+        if anchor is None and seg["route"].legs and seg["route"].legs[-1].to_point:
+            anchor = PlaceCandidate(
+                id=f"anchor-{seg['city']}",
+                name=seg["city"],
+                category=PlaceCategory.accommodation,
+                location=seg["route"].legs[-1].to_point,
+            )
+        pools.append({"ordered": must + (_order_attractions(anchor, rest) if anchor else rest),
+                      "must": must, "anchor": anchor, "food": seg["food"]})
+
+    if drop_count:
+        flat = [p for pool in pools for p in pool["ordered"] if p not in pool["must"]]
+        for dropped in flat[-drop_count:]:
+            for pool in pools:
+                if dropped in pool["ordered"]:
+                    pool["ordered"].remove(dropped)
+            excluded.append(ExcludedActivity(
+                name=dropped.name,
+                reason="Removed during feasibility repair: the remaining plan could not fit.",
+                alternatives=["Extend the trip", "Leave earlier", "Drop another stop"],
+            ))
+
+    n_legs = len(segments)
+    return_travel = 1 if req.includes_return else 0
+    stay_total = max(0, total_days - n_legs - return_travel)
+    stays = [stay_total // n_legs] * n_legs
+    for i in range(stay_total % n_legs):
+        stays[i] += 1
+
+    day_plans: list[DayPlan] = []
+    cursor = start
+    idx = 0
+    for s_i, seg in enumerate(segments):
+        departure = at(cursor, req.departure_time) if s_i == 0 else at(cursor, time_of(MORNING_START))
+        acts, arrival = _travel_day(req, cursor, departure, seg["route"], seg["stops"],
+                                    f"Drive — {seg['route'].legs[-1].to_name}")
+        city_nights = stays[s_i] + (1 if s_i == n_legs - 1 and not req.includes_return else 0)
+        acts.append(_checkin_activity(seg["city"], cursor, arrival, max(1, city_nights)))
+        acts.sort(key=lambda a: minutes_of(a.planned_start))
+        day_plans.append(DayPlan(day=cursor, activities=acts))
+        cursor += timedelta(days=1)
+        for _ in range(stays[s_i]):
+            pool = pools[s_i]
+            stay_acts, idx = _fill_attractions(req, cursor, MORNING_START, EVENING_CUTOFF,
+                                               pool["ordered"], pool["food"], pool["anchor"], idx)
+            day_plans.append(DayPlan(day=cursor, activities=sorted(stay_acts, key=lambda a: minutes_of(a.planned_start))))
+            cursor += timedelta(days=1)
+
+    if req.includes_return:
+        last_pool = pools[-1]
+        win_end = EVENING_CUTOFF
+        leave_min = None
+        ret_duration = route_back.total_duration_min + sum(s.dwell_minutes + s.detour_minutes for s in stops_back)
+        latest = (minutes_of(req.road.night_cutoff) - ret_duration - 15
+                  if req.road.avoid_night_riding else 23 * 60 - ret_duration)
+        if req.return_deadline:
+            latest = min(latest, minutes_of(req.return_deadline) - ret_duration - 20)
+        preferred = 15 * 60 if (ret - start).days <= 1 else 16 * 60
+        leave_min = max(MORNING_START, min(preferred, latest))
+        win_end = leave_min - 30
+        last_acts, idx = _fill_attractions(req, cursor, MORNING_START, win_end,
+                                           last_pool["ordered"], last_pool["food"], last_pool["anchor"], idx)
+        leave_dt = at(cursor, time_of(leave_min))
+        return_acts, _ = _travel_day(req, cursor, leave_dt, route_back, stops_back,
+                                     f"Drive — {route_back.legs[-1].to_name}")
+        last_acts.extend(return_acts)
+        last_acts.sort(key=lambda a: minutes_of(a.planned_start))
+        day_plans.append(DayPlan(day=cursor, activities=last_acts))
+
+    for pool in pools:
+        for cand in pool["ordered"]:
+            excluded.append(ExcludedActivity(
+                name=cand.name,
+                reason="Does not fit within the available time before the return departure at the chosen pace.",
+                alternatives=["Extend the trip", "Leave earlier", "Remove another attraction"],
+            ))
+
+    anchor = pools[0]["anchor"] if pools else None
+    return day_plans, excluded, anchor
+
+
+def build_budget(req: TripRequest, route_out: RouteOption, route_back: RouteOption, journey_km: float | None = None) -> BudgetSummary:
     lines: list[BudgetLine] = []
     people = max(1, req.group.total)
 
-    total_km = route_out.total_distance_km + (route_back.total_distance_km if req.includes_return else 0)
+    total_km = (journey_km if journey_km is not None
+                else route_out.total_distance_km + (route_back.total_distance_km if req.includes_return else 0))
     for vehicle in req.vehicles:
         if not vehicle.mileage_km_per_litre:
             continue
@@ -392,6 +558,30 @@ def build_budget(req: TripRequest, route_out: RouteOption, route_back: RouteOpti
         basis=f"₹{FOOD_INR_PER_PERSON_DAY}/person/day × {people} people × {days} days (planning estimate)",
         per_person_inr=FOOD_INR_PER_PERSON_DAY * days,
     ))
+
+    nights = max(0, days - 1)
+    if req.accommodation.budget_per_night_inr and nights:
+        amount = req.accommodation.budget_per_night_inr * req.accommodation.rooms * nights
+        lines.append(BudgetLine(
+            category="accommodation",
+            amount_inr=amount,
+            basis=(f"₹{req.accommodation.budget_per_night_inr}/room/night × "
+                   f"{req.accommodation.rooms} rooms × {nights} nights (your estimate; no reservation made)"),
+            per_person_inr=round(amount / people),
+        ))
+
+    for category, amount, basis in [
+        ("tolls", req.budget.tolls_inr, "your group estimate; verify against the selected route"),
+        ("activities", req.budget.activities_inr, "your group estimate for tickets and paid activities"),
+        ("local transport", req.budget.local_transport_inr, "your group estimate for destination transport"),
+    ]:
+        if amount is not None:
+            lines.append(BudgetLine(
+                category=category,
+                amount_inr=amount,
+                basis=basis,
+                per_person_inr=round(amount / people),
+            ))
 
     total = sum(l.amount_inr for l in lines)
     budget_total = req.budget.total_inr or (req.budget.per_person_inr * people if req.budget.per_person_inr else None)

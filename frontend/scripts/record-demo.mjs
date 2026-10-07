@@ -30,6 +30,10 @@ try{
   await page.locator('.support').first().scrollIntoViewIfNeeded();await pause(6000);
   await page.getByText('What didn’t fit & planning assumptions',{exact:true}).click();
   await page.locator('.support').last().scrollIntoViewIfNeeded();await pause(5000);
+  await page.getByRole('tab',{name:'Vacation chat'}).click();await pause(2500);
+  await page.getByRole('textbox',{name:'Message the agent'}).fill('Family of 4 driving from Hyderabad, cover Chennai and Madurai temples in 10 days');
+  await page.getByRole('button',{name:'Send',exact:true}).click();
+  await page.locator('.chat-log .msg.assistant').nth(1).waitFor({timeout:60000});await pause(5000);
   await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));await pause(3000);
   assert.deepEqual(errors,[]);
   assert(Date.now()-started<175000,'Recording exceeds demo limit; do not publish it');

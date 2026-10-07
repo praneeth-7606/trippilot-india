@@ -36,6 +36,6 @@ def health():
     return {
         "status": "ok",
         "fixture_mode": settings.fixture_mode,
-        "llm_enabled": False,
+        "llm_enabled": settings.llm_enabled,
         "search_budget": settings.trippilot_search_budget,
     }

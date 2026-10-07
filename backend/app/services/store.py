@@ -57,7 +57,10 @@ class TripStore:
             trip = self._trips.get(trip_id)
             if not trip:
                 return None
+            # Planning calls can complete out of order; the store owns final version allocation.
+            version.version = max((item.version for item in trip.versions), default=0) + 1
             trip.versions.append(version)
+            trip.versions.sort(key=lambda item: item.version)
             trip.status = version.status
             return trip
 

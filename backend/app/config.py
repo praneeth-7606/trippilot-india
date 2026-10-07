@@ -9,9 +9,9 @@ class Settings(BaseSettings):
     serpapi_api_key: str = ""
     trippilot_fixtures: bool = False
 
-    llm_provider: str = "openai"
-    openai_api_key: str = ""
-    llm_model: str = "gpt-4o-mini"
+    llm_provider: str = "mistral"
+    mistral_api_key: str = ""
+    mistral_model: str = "ministral-8b-latest"
 
     redis_url: str = ""
     database_url: str = ""
@@ -32,7 +32,7 @@ class Settings(BaseSettings):
 
     @property
     def llm_enabled(self) -> bool:
-        return bool(self.openai_api_key)
+        return self.llm_provider == "mistral" and bool(self.mistral_api_key)
 
 
 @lru_cache

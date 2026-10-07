@@ -91,6 +91,107 @@ def test_fixture_trip_end_to_end(monkeypatch):
     assert "id" not in client.get(shared).json()  # read-only recipients must not receive the private edit identifier
 
 
+def test_two_destinations_are_accepted_and_more_than_four_rejected():
+    assert request(destinations=["Munnar", "Thekkady"]).destinations == ["Munnar", "Thekkady"]
+    with pytest.raises(ValueError):
+        request(destinations=["A", "B", "C", "D", "E"])
+    with pytest.raises(ValueError):
+        request(destinations=["Munnar", "munnar "])
+
+
+def test_multicity_pipeline_covers_each_city_with_checkin(monkeypatch):
+    from app.models.itinerary import TravelMode
+    from app.planner.pipeline import PlanningPipeline
+    from app.services.maps import MapsService
+    from app.services.search import SearchService
+    from app.services.weather import WeatherService
+
+    def fake_route(self, origin, destination, mode, name, avoid_tolls=False):
+        leg = RouteLeg(id=name, from_name=origin, to_name=destination, distance_km=100,
+                       duration_min=120, travel_mode="two_wheeler")
+        best = RouteOption(id=name, label="Recommended route", legs=[leg],
+                           total_distance_km=100, total_duration_min=120)
+        alt_leg = RouteLeg(id=name + "-alt", from_name=origin, to_name=destination, distance_km=110,
+                           duration_min=130, travel_mode="two_wheeler")
+        alt = RouteOption(id=name + "-alt", label="Alternative route", legs=[alt_leg],
+                          total_distance_km=110, total_duration_min=130)
+        return best, [alt]
+
+    monkeypatch.setattr(PlanningPipeline, "route", fake_route)
+    monkeypatch.setattr(MapsService, "find_places", lambda *a, **k: [])
+    monkeypatch.setattr(WeatherService, "forecast", lambda *a, **k: [])
+    monkeypatch.setattr(SearchService, "advisories", lambda *a, **k: [])
+
+    req = request(destinations=["Munnar", "Thekkady"], start_date="2026-11-10",
+                  return_date="2026-11-13", road={"avoid_night_riding": False})
+    result = PlanningPipeline().plan(req)
+    names = [a.name for d in result.days for a in d.activities]
+    assert "Check-in — Munnar" in names
+    assert "Check-in — Thekkady" in names
+    assert any("Thekkady" in note or "Munnar" in note for note in result.notes)
+    assert all(i.severity != "error" for i in result.issues)
+
+
+def test_route_option_selects_the_listed_alternative(monkeypatch):
+    from app.planner.pipeline import PlanningPipeline
+    from app.services.maps import MapsService
+    from app.services.search import SearchService
+    from app.services.weather import WeatherService
+
+    def fake_route(self, origin, destination, mode, name, avoid_tolls=False):
+        def option(label, km, mins):
+            leg = RouteLeg(id=name + label, from_name=origin, to_name=destination, distance_km=km,
+                           duration_min=mins, travel_mode="two_wheeler")
+            return RouteOption(id=name + label, label=label, legs=[leg],
+                               total_distance_km=km, total_duration_min=mins)
+        return option("Recommended route", 100, 120), [option("Alternative route", 110, 130)]
+
+    monkeypatch.setattr(PlanningPipeline, "route", fake_route)
+    monkeypatch.setattr(MapsService, "find_places", lambda *a, **k: [])
+    monkeypatch.setattr(WeatherService, "forecast", lambda *a, **k: [])
+    monkeypatch.setattr(SearchService, "advisories", lambda *a, **k: [])
+
+    result = PlanningPipeline().plan(request(), route_option=1)
+    assert result.route.label == "Alternative route"
+    assert result.route.total_distance_km == 110
+
+
+def test_plan_endpoint_accepts_route_option(monkeypatch):
+    monkeypatch.setenv("TRIPPILOT_FIXTURES", "1")
+    from app.config import get_settings
+    get_settings.cache_clear()
+    from app.main import app
+    client = TestClient(app)
+    trip_id = client.post("/trips", json=request().model_dump(mode="json")).json()["id"]
+    first = client.post(f"/trips/{trip_id}/plan", json={"route_option": 0}).json()["version"]
+    assert first["route"]["label"] == "Recommended route"
+
+
+def test_converse_returns_validated_multistop_draft(monkeypatch):
+    monkeypatch.setenv("MISTRAL_API_KEY", "test-key")
+    from app.config import get_settings
+    get_settings.cache_clear()
+    from app.main import app
+    from app.services.copilot import MistralTripCopilot
+    monkeypatch.setattr(MistralTripCopilot, "_chat", lambda self, messages: {
+        "reply": "Got it! Any must-visit places?",
+        "trip": {
+            "origin": "Hyderabad",
+            "destinations": ["Chennai", "Madurai"],
+            "start_date": "2026-11-10",
+            "return_date": "2026-11-19",
+            "transport_mode": "car",
+            "group": {"adults": 4},
+        },
+        "clarifications": ["What is your budget?"],
+    })
+    client = TestClient(app)
+    body = client.post("/trips/converse", json={"messages": [
+        {"role": "user", "content": "Family of 4 from Hyderabad, cover Chennai and Madurai in 10 days"}]}).json()
+    assert body["request"]["destinations"] == ["Chennai", "Madurai"]
+    assert "budget" in body["clarifications"][0].lower()
+
+
 def test_fixture_cache_never_serves_synthetic_data_in_live_mode(monkeypatch):
     from app.config import get_settings
     from app.services.serpapi import SerpApiService

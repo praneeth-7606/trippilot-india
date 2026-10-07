@@ -13,7 +13,7 @@ export default function TripMap({plan,onSelect}:{plan:Plan;onSelect:(id:string)=
     for(const leg of plan.route?.legs||[]){
       for(const s of leg.steps)if(s.gps_coordinates)points.push([s.gps_coordinates.lat,s.gps_coordinates.lng]);
     }
-    if(points.length>1)L.polyline(points,{color:'#657c50',weight:3,dashArray:'6 6'}).addTo(map);
+    if(points.length>1)L.polyline(points,{color:'#3f5a3c',weight:3.5,dashArray:'7 7',className:'animated-route'}).addTo(map);
     const seen=new Set<string>();
     for(const a of plan.days.flatMap(d=>d.activities).filter((a:Activity)=>a.place?.location)){
       if(seen.has(a.place!.name))continue;seen.add(a.place!.name);
